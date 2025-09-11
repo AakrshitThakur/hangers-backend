@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import connect_db from "./db/connect.js";
 import adminAuthRouter from "./routes/admin-auth.routes.js";
+import adminClothRouter from "./routes/admin-cloth.routes.js";
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 // routers
 app.use("/api/v1/admin/auth", adminAuthRouter);
+app.use("/api/v1/admin/clothes", adminClothRouter);
 
 const port = process.env.PORT || 8080;
 
