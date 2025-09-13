@@ -12,18 +12,28 @@ const validateAdminInsertCloth = z
     images: z
       .string()
       .array()
-      .min(1, "Cloth must contain at least an image")
       .max(3, "Cloth cannot contain more than 3 images"),
     category: z.preprocess(
       (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
       z.enum(CLOTH_CATEGORIES)
     ),
-    actualPrice: z
-      .number()
-      .min(0, "Actual price must be greater than or equal to 0"),
-    discountedPrice: z
-      .number()
-      .min(0, "Actual price must be greater than or equal to 0"),
+    actualPrice: z.preprocess((input) => {
+      // Convert string to number
+      if (typeof input === "string") {
+        const parsed = Number(input);
+        if (isNaN(parsed)) return undefined; // Fail validation if not a number
+        return parsed;
+      }
+      return input; // pass through if already a number
+    }, z.number().min(0, "Actual price must be greater than or equal to 0")),
+    discountedPrice: z.preprocess((input) => {
+      if (typeof input === "string") {
+        const parsed = Number(input);
+        if (isNaN(parsed)) return undefined;
+        return parsed;
+      }
+      return input;
+    }, z.number().min(0, "Discounted price must be greater than or equal to 0")),
   })
   .strict();
 
@@ -46,14 +56,23 @@ const validateAdminUpdateCloth = z
       (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
       z.enum(CLOTH_CATEGORIES).optional()
     ),
-    actualPrice: z
-      .number()
-      .min(0, "Actual price must be greater than or equal to 0")
-      .optional(),
-    discountedPrice: z
-      .number()
-      .min(0, "Actual price must be greater than or equal to 0")
-      .optional(),
+    actualPrice: z.preprocess((input) => {
+      // Convert string to number
+      if (typeof input === "string") {
+        const parsed = Number(input);
+        if (isNaN(parsed)) return undefined; // Fail validation if not a number
+        return parsed;
+      }
+      return input; // pass through if already a number
+    }, z.number().min(0, "Actual price must be greater than or equal to 0").optional()),
+    discountedPrice: z.preprocess((input) => {
+      if (typeof input === "string") {
+        const parsed = Number(input);
+        if (isNaN(parsed)) return undefined;
+        return parsed;
+      }
+      return input;
+    }, z.number().min(0, "Discounted price must be greater than or equal to 0").optional()),
   })
   .strict();
 

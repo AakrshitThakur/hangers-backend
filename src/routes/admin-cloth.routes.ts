@@ -1,6 +1,6 @@
 import express from "express";
-import type { Request, Response } from "express";
 import { adminAuthMiddleware } from "../middlewares/admin-auth.middlewares.js";
+import { uploadClothImages } from "../middlewares/multer.js";
 import {
   adminClothInsertController,
   adminClothGetAllController,
@@ -14,7 +14,12 @@ const router = express.Router();
 router.get("/all", adminAuthMiddleware, adminClothGetAllController);
 
 // create a new cloth
-router.post("/create", adminAuthMiddleware, adminClothInsertController);
+router.post(
+  "/create",
+  adminAuthMiddleware,
+  uploadClothImages.array("clothImages", 3),
+  adminClothInsertController
+);
 
 // delete a cloth
 router.delete(

@@ -1,3 +1,4 @@
+import fs from "fs";
 import Cloth from "../../schemas/cloth.schema.js";
 import Admin from "../../schemas/admin.schema.js";
 import type { Request, Response } from "express";
@@ -8,16 +9,42 @@ import {
   validateAdminUpdateCloth,
 } from "../../schemas/zod/admin-cloth.zod.js";
 import { CLOTH_CATEGORIES } from "../../constants/cloth.constants.js";
+import { cloudinary } from "../../config/cloudinary.js";
 
 // creating new cloth
 async function adminClothInsertController(req: Request, res: Response) {
   try {
+    // array of raw images object
+    const rawImages = req.files as Express.Multer.File[];
+
     const credentials = req.body;
-    // seeds - development
-    credentials.images = [getRandomClothingImage(), getRandomClothingImage()];
+    credentials["images"] = [];
 
     // zod validations
     validateAdminInsertCloth.parse(credentials);
+
+    const sameTitle = await Cloth.findOne({ title: credentials.title });
+    if (sameTitle) {
+      res.status(403).json({
+        message: "A cloth with the same title already exists",
+      });
+      return;
+    }
+
+    // uploading all the images to cloudinary
+    if (rawImages?.length > 0) {
+      for (const rawImage of rawImages) {
+        const result = await cloudinary.uploader.upload(rawImage.path, {
+          folder: "hangers",
+        });
+        credentials.images.push(result.secure_url);
+
+        // remove temp raw image from tempClothImages folder
+        await fs.promises.unlink(rawImage.path);
+      }
+    }
+    // seeds - development
+    // credentials.images = [getRandomClothingImage(), getRandomClothingImage()];
 
     // security checking
     const adminId = req.adminCredentials?.id;
@@ -47,9 +74,9 @@ async function adminClothInsertController(req: Request, res: Response) {
     if (error instanceof ZodError) {
       console.error(error.issues);
       res.json({ message: error.issues[0]?.message || "Validation error" });
-    } else {
+    } else if (error instanceof Error) {
       console.error(error);
-      res.status(400).json({ message: error as string });
+      res.status(400).json({ message: error.message });
     }
   }
 }
