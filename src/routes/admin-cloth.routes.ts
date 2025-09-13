@@ -32,6 +32,7 @@ router.delete(
 router.patch(
   "/:clothId/update",
   adminAuthMiddleware,
+  uploadClothImages.array("clothImages", 3),
   adminClothUpdateController
 );
 

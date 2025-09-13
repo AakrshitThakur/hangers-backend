@@ -9,10 +9,21 @@ const validateAdminInsertCloth = z
       .trim()
       .min(3, "Username must be at least 3 characters long")
       .max(32, "Username cannot be more than 32 characters long"),
+    isTop3: z.preprocess((input) => {
+      if (typeof input === "string" && input.toLowerCase().trim() === "true") {
+        return true;
+      }
+      return false;
+    }, z.boolean().optional()),
     images: z
-      .string()
-      .array()
-      .max(3, "Cloth cannot contain more than 3 images"),
+      .array(
+        z.object({
+          url: z.string(),
+          publicId: z.string(),
+        })
+      )
+      .max(3, "Cloth cannot contain more than 3 images")
+      .optional(),
     category: z.preprocess(
       (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
       z.enum(CLOTH_CATEGORIES)
@@ -46,12 +57,31 @@ const validateAdminUpdateCloth = z
       .min(3, "Username must be at least 3 characters long")
       .max(32, "Username cannot be more than 32 characters long")
       .optional(),
+    isTop3: z.preprocess((input) => {
+      if (typeof input === "string" && input.toLowerCase().trim() === "true") {
+        return true;
+      }
+      return false;
+    }, z.boolean().optional()),
     images: z
-      .string()
-      .array()
-      .min(1, "Cloth must contain at least an image")
+      .array(
+        z.object({
+          url: z.string(),
+          publicId: z.string(),
+        })
+      )
       .max(3, "Cloth cannot contain more than 3 images")
       .optional(),
+    // publicIds: z
+    //   .array(z.string())
+    //   .max(3, "Cloth cannot delete more than 3 cloth images")
+    //   .optional(),
+    publicIds: z
+      .union([z.string(), z.array(z.string())])
+      .transform((val) => (typeof val === "string" ? [val] : val))
+      .refine((arr) => arr.length <= 3, {
+        message: "Cloth cannot delete more than 3 cloth images",
+      }),
     category: z.preprocess(
       (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
       z.enum(CLOTH_CATEGORIES).optional()
