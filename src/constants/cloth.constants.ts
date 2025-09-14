@@ -10,6 +10,15 @@ const CLOTH_CATEGORIES = [
   "bottoms",
 ];
 
+const SORT_CLOTHES = [
+  "new clothes",
+  "old clothes",
+  "↑ actual price",
+  "↓ actual price",
+  "↑ discounted price",
+  "↓ discounted price",
+];
+
 // Array of 25 working clothing image URLs
 const CLOTHING_IMAGES = [
   "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=400&h=300&fit=crop",
@@ -39,4 +48,4 @@ const CLOTHING_IMAGES = [
   "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=400&h=300&fit=crop",
 ];
 
-export { CLOTH_CATEGORIES, CLOTHING_IMAGES };
+export { CLOTH_CATEGORIES, CLOTHING_IMAGES, SORT_CLOTHES };

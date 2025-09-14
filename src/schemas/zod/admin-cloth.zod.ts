@@ -72,10 +72,6 @@ const validateAdminUpdateCloth = z
       )
       .max(3, "Cloth cannot contain more than 3 images")
       .optional(),
-    // publicIds: z
-    //   .array(z.string())
-    //   .max(3, "Cloth cannot delete more than 3 cloth images")
-    //   .optional(),
     publicIds: z
       .union([z.string(), z.array(z.string())])
       .transform((val) => (typeof val === "string" ? [val] : val))

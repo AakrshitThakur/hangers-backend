@@ -168,6 +168,12 @@ async function adminClothUpdateController(req: Request, res: Response) {
         allPublicIds.has(publicId)
       );
       if (!check) {
+        if (rawImages?.length) {
+          // cleanup all temp images
+          rawImages.forEach(
+            async (rawImage) => await fs.promises.unlink(rawImage.path)
+          );
+        }
         res.status(400).json({ message: "Invalid public ID" });
         return;
       }
