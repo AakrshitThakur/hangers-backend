@@ -3,7 +3,7 @@ import Cloth from "../../schemas/cloth.schema.js";
 import Admin from "../../schemas/admin.schema.js";
 import type { Request, Response } from "express";
 import { ZodError } from "zod";
-import { getRandomClothingImage } from "../../utils/admin-cloth.utils.js";
+import { deleteTempRawClothes } from "../../utils/admin-cloth.utils.js";
 import {
   validateAdminInsertCloth,
   validateAdminUpdateCloth,
@@ -23,13 +23,31 @@ async function adminClothInsertController(req: Request, res: Response) {
     // zod validations
     credentials = validateAdminInsertCloth.parse(credentials);
 
-    console.log(credentials);
+    // security checking
+    const adminId = req.adminCredentials?.id;
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      res
+        .status(401)
+        .json({ message: "Please sign in or create an account to continue" });
+      return;
+    }
+
+    if (credentials.actualPrice < credentials.discountedPrice) {
+      res.status(403).json({
+        message:
+          "The actual price must be greater than or equal to the discounted price",
+      });
+      deleteTempRawClothes(rawImages);
+      return;
+    }
 
     const sameTitle = await Cloth.findOne({ title: credentials.title });
     if (sameTitle) {
       res.status(403).json({
         message: "A cloth with the same title already exists",
       });
+      deleteTempRawClothes(rawImages);
       return;
     }
 
@@ -39,19 +57,18 @@ async function adminClothInsertController(req: Request, res: Response) {
       res
         .status(400)
         .json({ message: "You can only have 3 top cloth products at a time" });
+      deleteTempRawClothes(rawImages);
       return;
     }
 
     // not more than 3 images for a cloth document
     if (rawImages?.length > 3) {
-      // cleanup all temp images
-      rawImages.forEach(
-        async (rawImage) => await fs.promises.unlink(rawImage.path)
-      );
       // error response
       res.status(400).json({
         message: "Admin cannot add more than 3 images for a cloth",
       });
+      // cleanup all temp images
+      deleteTempRawClothes(rawImages);
       return;
     }
 
@@ -73,24 +90,6 @@ async function adminClothInsertController(req: Request, res: Response) {
     // seeds - development
     // credentials.images = [getRandomClothingImage(), getRandomClothingImage()];
 
-    // security checking
-    const adminId = req.adminCredentials?.id;
-    const admin = await Admin.findById(adminId);
-    if (!admin) {
-      res
-        .status(401)
-        .json({ message: "Please sign in or create an account to continue" });
-      return;
-    }
-
-    if (credentials.actualPrice < credentials.discountedPrice) {
-      res.status(403).json({
-        message:
-          "The actual price must be greater than or equal to the discounted price",
-      });
-      return;
-    }
-
     // create a new cloth
     const newCloth = new Cloth(credentials);
     await newCloth.save();
@@ -105,13 +104,17 @@ async function adminClothInsertController(req: Request, res: Response) {
       console.error(error);
       res.status(400).json({ message: error.message });
     }
+    // array of raw images object
+    const rawImages = req.files as Express.Multer.File[];
+    // cleanup all temp images
+    deleteTempRawClothes(rawImages);
   }
 }
 
 // update existing cloth
 async function adminClothUpdateController(req: Request, res: Response) {
   try {
-    const rawImages = req.files as Express.Multer.File[] | undefined;
+    const rawImages = req.files as Express.Multer.File[];
     let credentials = {
       ...req.body,
       images: [],
@@ -121,7 +124,9 @@ async function adminClothUpdateController(req: Request, res: Response) {
     // get cloth ID
     const { clothId } = req.params;
     if (!clothId) {
-      return res.status(400).json({ message: "Invalid cloth ID" });
+      res.status(400).json({ message: "Invalid cloth ID" });
+      deleteTempRawClothes(rawImages);
+      return;
     }
 
     // validate credentials
@@ -131,17 +136,19 @@ async function adminClothUpdateController(req: Request, res: Response) {
     const adminId = req.adminCredentials?.id;
     const admin = await Admin.findById(adminId);
     if (!admin) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized. Please sign in again." });
+      res.status(401).json({ message: "Unauthorized. Please sign in again." });
+      deleteTempRawClothes(rawImages);
+      return;
     }
 
     // validate price
     if (credentials.actualPrice < credentials.discountedPrice) {
-      return res.status(403).json({
+      res.status(403).json({
         message:
           "Actual price must be greater than or equal to discounted price",
       });
+      deleteTempRawClothes(rawImages);
+      return;
     }
 
     // restrict to a maximum of three top clothing products
@@ -150,31 +157,48 @@ async function adminClothUpdateController(req: Request, res: Response) {
       res
         .status(400)
         .json({ message: "You can only have 3 top cloth products at a time" });
+      deleteTempRawClothes(rawImages);
       return;
     }
 
-    // no image changes: update simple fields
-    if (credentials.publicIds.length || rawImages?.length) {
-      // fetch cloth for image updates
-      const cloth = await Cloth.findById(clothId);
-      if (!cloth) {
-        res.status(404).json({ message: "Cloth not found" });
+    // fetch cloth for image updates
+    const cloth = await Cloth.findById(clothId);
+    if (!cloth) {
+      res.status(404).json({ message: "Cloth not found" });
+      deleteTempRawClothes(rawImages);
+      return;
+    }
+
+    // check actual and discount prices
+    if (!credentials.actualPrice || !credentials.discountedPrice) {
+      if (credentials.actualPrice < cloth.discountedPrice) {
+        res.status(400).json({
+          message:
+            "Actual price must be greater than or equal to discounted price",
+        });
+        deleteTempRawClothes(rawImages);
         return;
       }
+      if (credentials.discountedPrice > cloth.actualPrice) {
+        res.status(400).json({
+          message:
+            "Actual price must be greater than or equal to discounted price",
+        });
+        deleteTempRawClothes(rawImages);
+        return;
+      }
+    }
 
+    // updating: images + additional fields
+    if (credentials.publicIds.length || rawImages?.length) {
       // authenticity of provided public ids
       const allPublicIds = new Set(cloth.images.map((image) => image.publicId));
       const check = credentials.publicIds.every((publicId: string) =>
         allPublicIds.has(publicId)
       );
       if (!check) {
-        if (rawImages?.length) {
-          // cleanup all temp images
-          rawImages.forEach(
-            async (rawImage) => await fs.promises.unlink(rawImage.path)
-          );
-        }
         res.status(400).json({ message: "Invalid public ID" });
+        deleteTempRawClothes(rawImages);
         return;
       }
 
@@ -183,6 +207,7 @@ async function adminClothUpdateController(req: Request, res: Response) {
         new Set(credentials.publicIds).size !== credentials.publicIds.length;
       if (duplicate) {
         res.status(400).json({ message: "Duplicate public IDs" });
+        deleteTempRawClothes(rawImages);
         return;
       }
 
@@ -191,9 +216,9 @@ async function adminClothUpdateController(req: Request, res: Response) {
         try {
           const response = await cloudinary.uploader.destroy(publicId);
           if (response.result === "not found") {
-            return res
-              .status(400)
-              .json({ message: `Invalid public ID: ${publicId}` });
+            res.status(400).json({ message: `Invalid public ID: ${publicId}` });
+            deleteTempRawClothes(rawImages);
+            return;
           }
         } catch (error) {
           const msg =
@@ -201,7 +226,9 @@ async function adminClothUpdateController(req: Request, res: Response) {
               ? error.message
               : "Unknown error deleting image";
           console.error("Cloudinary delete error:", msg);
-          return res.status(400).json({ message: msg });
+          res.status(400).json({ message: msg });
+          deleteTempRawClothes(rawImages);
+          return;
         }
       }
 
@@ -215,9 +242,7 @@ async function adminClothUpdateController(req: Request, res: Response) {
         for (const rawImage of rawImages) {
           if (cloth.images.length >= 3) {
             // cleanup all temp images
-            rawImages.forEach(
-              async (rawImage) => await fs.promises.unlink(rawImage.path)
-            );
+            deleteTempRawClothes(rawImages);
             // error response
             res.status(400).json({
               message: "Admin cannot add more than 3 images for a cloth",
@@ -266,17 +291,20 @@ async function adminClothUpdateController(req: Request, res: Response) {
     }
     // success response
     res.status(200).json({ message: "Cloth updated successfully" });
-    return;
   } catch (error) {
     if (error instanceof ZodError) {
       console.error("Validation error:", error.issues);
-      return res
+      res
         .status(400)
         .json({ message: error.issues[0]?.message || "Validation error" });
+    } else {
+      console.error("Unexpected error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
-
-    console.error("Unexpected error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    // array of raw images object
+    const rawImages = req.files as Express.Multer.File[];
+    // cleanup all temp images
+    deleteTempRawClothes(rawImages);
   }
 }
 
@@ -298,7 +326,6 @@ async function adminClothGetAllController(req: Request, res: Response) {
     if (!category) {
       // no filter
       const clothes = await Cloth.find({}, "-__v").populate("images");
-      console.log(clothes);
       //error response
       if (clothes.length < 1) {
         res
@@ -339,6 +366,10 @@ async function adminClothGetAllController(req: Request, res: Response) {
       console.error(error);
       res.status(400).json({ message: error as string });
     }
+    // array of raw images object
+    const rawImages = req.files as Express.Multer.File[];
+    // cleanup all temp images
+    deleteTempRawClothes(rawImages);
   }
 }
 
