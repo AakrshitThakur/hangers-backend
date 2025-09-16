@@ -11,12 +11,12 @@ const CLOTH_CATEGORIES = [
 ];
 
 const SORT_CLOTHES = [
-  "new clothes",
-  "old clothes",
-  "↑ actual price",
-  "↓ actual price",
-  "↑ discounted price",
-  "↓ discounted price",
+  "new_clothes",
+  "old_clothes",
+  "actual_price_desc",
+  "actual_price_asc",
+  "discounted_price_desc",
+  "discounted_price_asc",
 ];
 
 // Array of 25 working clothing image URLs

@@ -153,7 +153,7 @@ async function adminClothUpdateController(req: Request, res: Response) {
 
     // restrict to a maximum of three top clothing products
     const moreThan3 = await Cloth.countDocuments({ isTop3: true });
-    if (moreThan3 >= 3) {
+    if (credentials.isTop3 && moreThan3 >= 3) {
       res
         .status(400)
         .json({ message: "You can only have 3 top cloth products at a time" });
@@ -241,6 +241,8 @@ async function adminClothUpdateController(req: Request, res: Response) {
       if (rawImages?.length) {
         for (const rawImage of rawImages) {
           if (cloth.images.length >= 3) {
+            // save changes
+            await cloth.save();
             // cleanup all temp images
             deleteTempRawClothes(rawImages);
             // error response

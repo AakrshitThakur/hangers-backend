@@ -1,17 +1,17 @@
 function sortClothes(input: string) {
   switch (input) {
-    case "new clothes":
+    case "new_clothes":
       return { createdAt: -1 };
-    case "old clothes":
+    case "old_clothes":
       return { createdAt: 1 };
-    case "↑ actual price":
+    case "actual_price_desc":
       return { actualPrice: -1 };
-    case "↓ actual price":
+    case "actual_price_asc":
       return { actualPrice: 1 };
-    case "↑ discounted price":
-      return { discountedPrice: 1 };
-    case "↑ discounted price":
+    case "discounted_price_desc":
       return { discountedPrice: -1 };
+    case "discounted_price_asc":
+      return { discountedPrice: 1 };
     default:
       return { createdAt: -1 };
   }

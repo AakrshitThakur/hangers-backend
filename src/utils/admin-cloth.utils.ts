@@ -6,10 +6,18 @@ function getRandomClothingImage() {
   return CLOTHING_IMAGES[zero_to_24];
 }
 
-function deleteTempRawClothes(rawImages: Express.Multer.File[]) {
+async function deleteTempRawClothes(rawImages: Express.Multer.File[]) {
   // cleanup all temp images
   for (const rawImage of rawImages) {
-    fs.promises.unlink(rawImage.path);
+    try {
+      await fs.promises.unlink(rawImage.path);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error(error);
+      }
+    }
   }
 }
 

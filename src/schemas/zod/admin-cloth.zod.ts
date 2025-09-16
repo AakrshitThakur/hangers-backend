@@ -76,7 +76,7 @@ const validateAdminUpdateCloth = z
       .union([z.string(), z.array(z.string())])
       .transform((val) => (typeof val === "string" ? [val] : val))
       .refine((arr) => arr.length <= 3, {
-        message: "Cloth cannot delete more than 3 cloth images",
+        message: "Admin cannot delete more than 3 cloth images",
       }),
     category: z.preprocess(
       (val) => (typeof val === "string" ? val.trim().toLowerCase() : val),
@@ -85,7 +85,7 @@ const validateAdminUpdateCloth = z
     actualPrice: z.preprocess((input) => {
       // Convert string to number
       if (typeof input === "string") {
-        const parsed = Number(input);
+        const parsed = parseInt(input);
         if (isNaN(parsed)) return undefined; // Fail validation if not a number
         return parsed;
       }
@@ -93,7 +93,7 @@ const validateAdminUpdateCloth = z
     }, z.number().min(0, "Actual price must be greater than or equal to 0").optional()),
     discountedPrice: z.preprocess((input) => {
       if (typeof input === "string") {
-        const parsed = Number(input);
+        const parsed = parseInt(input);
         if (isNaN(parsed)) return undefined;
         return parsed;
       }
