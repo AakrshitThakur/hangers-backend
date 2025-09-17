@@ -73,8 +73,8 @@ async function userClothGetAllController(req: Request, res: Response) {
     // error response
     if (clothes.length < 1) {
       res
-        .status(400)
-        .json({ message: "Requested clothes could not be found", clothes });
+        .status(200)
+        .json({ message: "Requested clothes could not be found", clothes: [] });
       return;
     }
     // success response
