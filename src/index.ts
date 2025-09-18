@@ -22,8 +22,8 @@ connect_db();
 app.use(express.json());
 
 // routers
-app.use("/api/v1/admin/auth", adminAuthRouter);
-app.use("/api/v1/admin/clothes", adminClothRouter);
+app.use("/api/v1/admins/auth", adminAuthRouter);
+app.use("/api/v1/admins/clothes", adminClothRouter);
 app.use("/api/v1/users/clothes", userClothRouter);
 
 const port = process.env.PORT || 8080;

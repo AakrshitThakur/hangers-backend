@@ -16,23 +16,6 @@ async function userClothGetAllController(req: Request, res: Response) {
     let { category, search, sort, is_top_3 } =
       validateUserClothGetAllQuery.parse(q);
 
-    // if (!category && !search && !sort) {
-    //   // no filter
-    //   const clothes = await Cloth.find({}, "-__v").populate("images");
-    //   //error response
-    //   if (clothes.length < 1) {
-    //     res
-    //       .status(400)
-    //       .json({ message: "Requested clothes could not be found" });
-    //     return;
-    //   }
-    //   // success response
-    //   res
-    //     .status(200)
-    //     .json({ message: "All clothes have been received", clothes });
-    //   return;
-    // }
-
     if (category && !CLOTH_CATEGORIES.includes(category)) {
       // error response
       res.status(400).json({ message: "Invalid cloth category type" });
