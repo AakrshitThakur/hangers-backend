@@ -59,7 +59,7 @@ async function adminClothInsertController(req: Request, res: Response) {
 
     // restrict to a maximum of three top clothing products
     const moreThan3 = await Cloth.countDocuments({ isTop3: true });
-    if (moreThan3 >= 3) {
+    if (moreThan3 >= 3 && credentials.isTop3) {
       res
         .status(400)
         .json({ message: "You can only have 3 top cloth products at a time" });

@@ -12,6 +12,7 @@ async function adminAuthMiddleware(
   res: Response,
   next: NextFunction
 ) {
+
   // get all cookies
   const cookies = req.headers.cookie;
   if (!cookies) {
@@ -23,7 +24,7 @@ async function adminAuthMiddleware(
 
   // make object from string
   const cookiesObj = Object.fromEntries(
-    cookies.split(";").map((c) => c.split("="))
+    cookies.split("; ").map((c) => c.split("="))
   );
 
   // get jwt
