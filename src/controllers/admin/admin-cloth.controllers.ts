@@ -105,7 +105,55 @@ async function adminClothInsertController(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof ZodError) {
       console.error(error.issues);
-      res.json({ message: error.issues[0]?.message || "Validation error" });
+      res
+        .status(400)
+        .json({ message: error.issues[0]?.message || "Validation error" });
+    } else if (error instanceof Error) {
+      console.error(error);
+      res.status(400).json({ message: error.message });
+    }
+    // array of raw images object
+    const rawImages = req.files as Express.Multer.File[];
+    // cleanup all temp images
+    deleteTempRawClothes(rawImages);
+  }
+}
+
+// read a specific cloth
+async function adminClothReadController(req: Request, res: Response) {
+  try {
+    const { clothId } = req.params;
+
+    // security checking
+    const adminId = req.adminCredentials?.id;
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      res
+        .status(401)
+        .json({ message: "Please sign in or create an account to continue" });
+      return;
+    }
+
+    // Cloth ID not provided
+    if (!clothId) {
+      res.status(400).json({ message: "Please provide a valid cloth ID" });
+      return;
+    }
+
+    // Invalid cloth ID
+    const cloth = await Cloth.findById(clothId, "-__v");
+    if (!cloth) {
+      res.status(404).json({ message: "No cloth found" });
+      return;
+    }
+    // success response
+    res.status(200).json({ message: "Cloth successfully found", cloth });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      console.error(error.issues);
+      res
+        .status(400)
+        .json({ message: error.issues[0]?.message || "Validation error" });
     } else if (error instanceof Error) {
       console.error(error);
       res.status(400).json({ message: error.message });
@@ -386,7 +434,9 @@ async function adminClothGetAllController(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof ZodError) {
       console.error(error.issues);
-      res.json({ message: error.issues[0]?.message || "Validation error" });
+      res
+        .status(400)
+        .json({ message: error.issues[0]?.message || "Validation error" });
     } else {
       console.error(error);
       res.status(400).json({ message: error as string });
@@ -451,7 +501,9 @@ async function adminClothDeleteController(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof ZodError) {
       console.error(error.issues);
-      res.json({ message: error.issues[0]?.message || "Validation error" });
+      res
+        .status(400)
+        .json({ message: error.issues[0]?.message || "Validation error" });
     } else {
       console.error(error);
       res.status(400).json({ message: error as string });
@@ -464,4 +516,5 @@ export {
   adminClothGetAllController,
   adminClothDeleteController,
   adminClothUpdateController,
+  adminClothReadController,
 };

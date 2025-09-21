@@ -6,12 +6,16 @@ import {
   adminClothGetAllController,
   adminClothDeleteController,
   adminClothUpdateController,
+  adminClothReadController,
 } from "../controllers/admin/admin-cloth.controllers.js";
 
 const router = express.Router();
 
 // get all or filtered clothes
 router.get("/all", adminAuthMiddleware, adminClothGetAllController);
+
+// get a specific cloth
+router.get("/:clothId/read", adminAuthMiddleware, adminClothReadController);
 
 // create a new cloth
 router.post(

@@ -155,4 +155,32 @@ function adminSignoutController(req: Request, res: Response) {
   }
 }
 
-export { adminSignupController, adminSigninController, adminSignoutController };
+async function adminIsAuthenticatedController(req: Request, res: Response) {
+  try {
+    // security checking
+    const adminId = req.adminCredentials?.id;
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      res.status(401).json({ message: "Please sign in to continue" });
+      return;
+    }
+    res.status(200).json({
+      message: `${admin.username} is already authenticated as administrator`,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    console.error(error);
+    res.status(400).json({ message: error as string });
+  }
+}
+
+export {
+  adminSignupController,
+  adminSigninController,
+  adminSignoutController,
+  adminIsAuthenticatedController,
+};
