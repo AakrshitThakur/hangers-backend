@@ -27,5 +27,8 @@
     "multer-storage-cloudinary": "^4.0.0",
     "typescript": "^5.9.2",
     "zod": "^4.1.5"
+  },
+  "overrides": {
+    "cloudinary": "^2.7.0"
   }
 }
