@@ -1,7 +1,7 @@
 import express from "express";
 import { adminAuthMiddleware } from "../middlewares/admin-auth.middlewares.js";
 import {
-  adminSignupController,
+  // adminSignupController,
   adminSigninController,
   adminSignoutController,
   adminIsAuthenticatedController,
@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.post("/signup", adminSignupController);
+// router.post("/signup", adminSignupController);
 router.post("/signin", adminSigninController);
 router.post("/signout", adminSignoutController);
 router.get(

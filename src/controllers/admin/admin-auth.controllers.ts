@@ -54,6 +54,7 @@ async function adminSignupController(req: Request, res: Response) {
     // Cookies are sent via the HTTP response header
     res.cookie("jwt", jwt, {
       httpOnly: true,
+      sameSite: "none",
       secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 6 * 3600000, // (6 * 1) hours
@@ -118,6 +119,7 @@ async function adminSigninController(req: Request, res: Response) {
     res.cookie("jwt", jwt, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
       path: "/",
       maxAge: 6 * 3600000, // (6 * 1) hours
     });
@@ -143,6 +145,7 @@ function adminSignoutController(req: Request, res: Response) {
     res.cookie("jwt", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
       path: "/",
       maxAge: 0, // 0ms
     });
