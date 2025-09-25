@@ -205,20 +205,20 @@ async function adminClothUpdateController(req: Request, res: Response) {
       return;
     }
 
-    // restrict to a maximum of three top clothing products
-    const moreThan3 = await Cloth.countDocuments({ isTop3: true });
-    if (credentials.isTop3 && moreThan3 >= 3) {
-      res
-        .status(400)
-        .json({ message: "You can only have 3 top cloth products at a time" });
-      deleteTempRawClothes(rawImages);
-      return;
-    }
-
     // fetch cloth for image updates
     const cloth = await Cloth.findById(clothId);
     if (!cloth) {
       res.status(404).json({ message: "Cloth not found" });
+      deleteTempRawClothes(rawImages);
+      return;
+    }
+
+    // restrict to a maximum of three top clothing products
+    const moreThan3 = await Cloth.countDocuments({ isTop3: true });
+    if (credentials.isTop3 && !cloth.isTop3 && moreThan3 >= 3) {
+      res
+        .status(400)
+        .json({ message: "You can only have 3 top cloth products at a time" });
       deleteTempRawClothes(rawImages);
       return;
     }
