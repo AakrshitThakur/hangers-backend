@@ -26,10 +26,11 @@ app.use("/api/v1/admins/auth", adminAuthRouter);
 app.use("/api/v1/admins/clothes", adminClothRouter);
 app.use("/api/v1/users/clothes", userClothRouter);
 
-// const port = process.env.PORT || 8080;
-// app.listen(port, () => {
-//   console.info("Server successfully running on port", port);
-// });
+// starting server on specific port
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+  console.info("Server successfully running on port", port);
+});
 
-// Export the app instance for Vercel deployment
-export default app;
+// // Export the app instance for Vercel deployment
+// export default app;
